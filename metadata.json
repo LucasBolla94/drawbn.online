@@ -1,0 +1,5 @@
+{
+  "name": "DrawBN",
+  "description": "A professional blackboard drawing application with Magic Pen shape recognition, session-based persistence, and PDF export functionality.",
+  "requestFramePermissions": []
+}
