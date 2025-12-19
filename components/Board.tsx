@@ -149,7 +149,7 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
 
     ctx.strokeStyle = '#0a0a0a';
     ctx.lineWidth = 1;
-    const gridSize = 100 * view.zoom;
+    const gridSize = 120 * view.zoom;
     const startX = view.x % gridSize;
     const startY = view.y % gridSize;
     ctx.beginPath();
@@ -179,13 +179,11 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
     const screenPt = getPoint(isTouch ? (e as React.TouchEvent).touches[0] : e);
     const worldPt = toWorld(screenPt);
 
-    // If typing, finish unless clicking inside input
     if (activeTextId && !inputRef.current?.contains(e.target as Node)) {
         completeTextInput();
         return;
     }
 
-    // Panning checks
     if (!isTouch && ((e as React.MouseEvent).button === 2 || (e as React.MouseEvent).button === 1)) {
         setIsPanning(true);
         setLastPos({ x: (e as React.MouseEvent).clientX, y: (e as React.MouseEvent).clientY });
@@ -202,7 +200,6 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
     }
 
     if (tool === 'text') {
-      // Check if clicking existing text for moving/editing
       const clickedText = [...actions].reverse().find(a => {
           if (a.type !== 'text' || !a.text) return false;
           const p = toScreen(a.points[0]);
@@ -343,7 +340,7 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
 
       {textScreenPos && (
         <div 
-          className={`absolute z-50 transition-opacity ${isDraggingText ? 'opacity-50' : 'opacity-100'}`}
+          className={`absolute z-50 transition-opacity flex flex-col items-start ${isDraggingText ? 'opacity-40' : 'opacity-100'}`}
           style={{ 
             left: textScreenPos.x, 
             top: textScreenPos.y,
@@ -351,6 +348,10 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
             transformOrigin: '0 0'
           }}
         >
+          <div className="absolute -top-6 left-0 flex items-center gap-2 whitespace-nowrap bg-black/60 backdrop-blur-md text-[9px] text-white/60 px-2 py-0.5 rounded-t border border-white/10 uppercase font-black tracking-widest pointer-events-none">
+             <span>{isDraggingText ? 'Moving...' : 'Typing...'}</span>
+             {activeTextValue && !isDraggingText && <span className="text-purple-400">Press Enter to save</span>}
+          </div>
           <input
             ref={inputRef}
             type="text"
@@ -358,21 +359,17 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
             onChange={(e) => setActiveTextValue(e.target.value)}
             onBlur={completeTextInput}
             onKeyDown={(e) => e.key === 'Enter' && completeTextInput()}
-            className="bg-transparent border-none outline-none font-bold p-0 m-0 pointer-events-auto"
+            className="bg-transparent border-none outline-none font-bold p-0 m-0 pointer-events-auto shadow-none"
             style={{ 
               color: color, 
               fontSize: `${brushSize}px`,
               fontFamily: fontFamily,
               caretColor: color,
-              minWidth: '50px',
-              width: `${(activeTextValue.length + 1) * 0.6}em`
+              minWidth: '20px',
+              width: `${Math.max(1, activeTextValue.length + 1) * 0.7}em`
             }}
-            placeholder="..."
+            placeholder="Type here..."
           />
-          {/* Drag handle visual hint */}
-          <div className="absolute -top-6 left-0 bg-white/10 text-[10px] text-white/40 px-2 py-0.5 rounded-t backdrop-blur-sm border border-white/10">
-            MOVABLE
-          </div>
         </div>
       )}
     </div>

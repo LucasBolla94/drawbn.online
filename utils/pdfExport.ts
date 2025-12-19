@@ -10,8 +10,6 @@ interface ExportParams {
 }
 
 export async function exportToPDF({ actions, width, height, view }: ExportParams) {
-  // Create a high-quality offscreen canvas for rendering
-  // We use a clean canvas here so the grid from the UI is never included
   const offscreen = document.createElement('canvas');
   offscreen.width = width;
   offscreen.height = height;
@@ -22,15 +20,14 @@ export async function exportToPDF({ actions, width, height, view }: ExportParams
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, width, height);
 
-  // Helper to convert world coordinates to screen coordinates for the PDF export
   const toScreen = (worldPoint: Point) => ({
     x: worldPoint.x * view.zoom + view.x,
     y: worldPoint.y * view.zoom + view.y
   });
 
-  // 2. Draw all user actions precisely as they appear on screen
+  // 2. Draw all user actions
   actions.forEach(action => {
-    const { type, points, color, brushSize, shape, text } = action;
+    const { type, points, color, brushSize, shape, text, fontFamily } = action;
     if (points.length === 0) return;
 
     ctx.strokeStyle = color;
@@ -41,7 +38,9 @@ export async function exportToPDF({ actions, width, height, view }: ExportParams
 
     if (type === 'text' && text) {
       const p = toScreen(points[0]);
-      ctx.font = `bold ${brushSize * 4 * view.zoom}px Inter, sans-serif`;
+      const scaledFontSize = brushSize * view.zoom;
+      ctx.font = `bold ${scaledFontSize}px ${fontFamily || 'Inter'}`;
+      ctx.textBaseline = 'top';
       ctx.fillText(text, p.x, p.y);
       return;
     }
@@ -67,12 +66,8 @@ export async function exportToPDF({ actions, width, height, view }: ExportParams
           ctx.moveTo(lStart.x, lStart.y);
           ctx.lineTo(lEnd.x, lEnd.y);
           break;
-        case 'square':
-          ctx.rect(start.x, start.y, w, h);
-          break;
-        case 'circle':
-          ctx.arc(start.x + w / 2, start.y + h / 2, Math.max(w, h) / 2, 0, Math.PI * 2);
-          break;
+        case 'square': ctx.rect(start.x, start.y, w, h); break;
+        case 'circle': ctx.arc(start.x + w / 2, start.y + h / 2, Math.max(w, h) / 2, 0, Math.PI * 2); break;
         case 'triangle':
           ctx.moveTo(start.x + w / 2, start.y);
           const trB1 = toScreen({ x: maxX, y: maxY });
@@ -95,14 +90,14 @@ export async function exportToPDF({ actions, width, height, view }: ExportParams
     }
   });
 
-  // 3. Add Professional Watermark (Lower-Right Corner)
-  const watermark = "DRAWBN.ONLINE";
-  ctx.font = "600 18px Inter, sans-serif";
-  ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+  // 3. Updated Watermark (New Domain)
+  const watermark = "draw.bolla.network";
+  ctx.font = "600 16px Inter, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
   const textMetrics = ctx.measureText(watermark);
   ctx.fillText(watermark, width - textMetrics.width - 40, height - 40);
 
-  // 4. Final PDF Generation
+  // 4. PDF Generation
   const imgData = offscreen.toDataURL('image/png', 1.0);
   const pdf = new jsPDF({
     orientation: width > height ? 'l' : 'p',
@@ -112,5 +107,5 @@ export async function exportToPDF({ actions, width, height, view }: ExportParams
   });
 
   pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-  pdf.save(`drawbn-export-${Date.now()}.pdf`);
+  pdf.save(`drawbn-bolla-${Date.now()}.pdf`);
 }
