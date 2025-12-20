@@ -1,20 +1,28 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# Pennodraw Storage Management
 
-This contains everything you need to run your app locally.
+Pennodraw uses `localStorage` to persist your creative sessions directly in your browser. This ensures that your work is available even after closing the tab.
 
-View your app in AI Studio: https://ai.studio/apps/drive/16xutObuBLCd-EAIPStX7KZLQ5hQo8TQ3
+## Document Structure
+All drawings are saved using the prefix:
+`pennodraw_doc_` followed by a unique session hash (e.g., `pennodraw_doc_x8f2k9a`).
 
-## Run Locally
+## How to Reset/Clear Saved Projects
+If you wish to clear all locally saved Pennodraw projects at once, you can follow these steps in your browser:
 
-**Prerequisites:**  Node.js
+1. Open Pennodraw in your browser.
+2. Press `F12` or `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (Mac) to open the **Developer Tools**.
+3. Go to the **Console** tab.
+4. Copy and paste the following command and press **Enter**:
 
+```javascript
+Object.keys(localStorage)
+  .filter(key => key.startsWith('pennodraw_doc_'))
+  .forEach(key => localStorage.removeItem(key));
+location.reload();
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+This script scans your browser's local storage for keys belonging specifically to Pennodraw and removes them, resetting your project count and clearing the workspace history.
+
+---
+*Created by Pennodraw Team*

@@ -7,7 +7,7 @@ export interface Point {
   y: number;
 }
 
-export type ActionType = 'draw' | 'text';
+export type ActionType = 'draw' | 'text' | 'erase';
 
 export interface DrawingAction {
   id: string;

@@ -41,7 +41,6 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
   useEffect(() => {
     const handleResize = () => {
       if (canvasRef.current) {
-        // Handle pixel density for crisp drawing
         const dpr = window.devicePixelRatio || 1;
         canvasRef.current.width = window.innerWidth * dpr;
         canvasRef.current.height = window.innerHeight * dpr;
@@ -201,6 +200,12 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
       return;
     }
 
+    if (tool === 'erase') {
+        setIsDrawing(true);
+        eraseAt(worldPt);
+        return;
+    }
+
     if (tool === 'text') {
       const clickedText = [...actions].reverse().find(a => {
           if (a.type !== 'text' || !a.text) return false;
@@ -264,8 +269,16 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
         return;
     }
 
-    if (!isDrawing || tool !== 'draw') return;
-    setCurrentPoints(prev => [...prev, worldPt]);
+    if (!isDrawing) return;
+
+    if (tool === 'erase') {
+        eraseAt(worldPt);
+        return;
+    }
+
+    if (tool === 'draw') {
+        setCurrentPoints(prev => [...prev, worldPt]);
+    }
   };
 
   const handleEnd = () => {
@@ -274,7 +287,7 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
     setIsDraggingText(false);
     if (!isDrawing) return;
     setIsDrawing(false);
-    if (currentPoints.length > 1) {
+    if (tool === 'draw' && currentPoints.length > 1) {
         onAction({ 
           id: Math.random().toString(36).substring(2, 9),
           type: 'draw', 
@@ -286,6 +299,23 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
         });
     }
     setCurrentPoints([]);
+  };
+
+  const eraseAt = (pt: Point) => {
+    const threshold = brushSize / 2;
+    // Iterate backwards to erase top-most first
+    for (let i = actions.length - 1; i >= 0; i--) {
+        const action = actions[i];
+        const isNear = action.points.some(p => {
+            const dx = p.x - pt.x;
+            const dy = p.y - pt.y;
+            return Math.sqrt(dx * dx + dy * dy) < threshold;
+        });
+        if (isNear) {
+            onDeleteAction(action.id);
+            break; // Erase one action per "dab" for precision
+        }
+    }
   };
 
   const completeTextInput = () => {
@@ -337,8 +367,21 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
         onTouchStart={handleStart}
         onTouchMove={handleMove}
         onTouchEnd={handleEnd}
-        className="cursor-crosshair w-full h-full block"
+        className={`w-full h-full block ${tool === 'erase' ? 'cursor-none' : 'cursor-crosshair'}`}
       />
+
+      {/* Eraser Cursor Indicator */}
+      {tool === 'erase' && isDrawing && (
+          <div className="fixed pointer-events-none rounded-full border border-white/40 bg-white/10" 
+               style={{ 
+                   width: `${brushSize * view.zoom}px`, 
+                   height: `${brushSize * view.zoom}px`, 
+                   left: lastPos ? lastPos.x : 0, 
+                   top: lastPos ? lastPos.y : 0,
+                   transform: 'translate(-50%, -50%)'
+               }} 
+          />
+      )}
 
       {textScreenPos && (
         <div 
