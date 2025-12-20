@@ -16,7 +16,6 @@ export async function exportToPDF({ actions, width, height, view }: ExportParams
   const ctx = offscreen.getContext('2d');
   if (!ctx) return;
 
-  // 1. Draw Production Background (Solid Black)
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, width, height);
 
@@ -25,7 +24,6 @@ export async function exportToPDF({ actions, width, height, view }: ExportParams
     y: worldPoint.y * view.zoom + view.y
   });
 
-  // 2. Draw all user actions
   actions.forEach(action => {
     const { type, points, color, brushSize, shape, text, fontFamily } = action;
     if (points.length === 0) return;
@@ -90,14 +88,12 @@ export async function exportToPDF({ actions, width, height, view }: ExportParams
     }
   });
 
-  // 3. Updated Watermark (New Domain)
-  const watermark = "draw.bolla.network";
-  ctx.font = "600 16px Inter, sans-serif";
-  ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+  const watermark = "pennodraw.com";
+  ctx.font = "800 16px Inter, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
   const textMetrics = ctx.measureText(watermark);
   ctx.fillText(watermark, width - textMetrics.width - 40, height - 40);
 
-  // 4. PDF Generation
   const imgData = offscreen.toDataURL('image/png', 1.0);
   const pdf = new jsPDF({
     orientation: width > height ? 'l' : 'p',
@@ -107,5 +103,5 @@ export async function exportToPDF({ actions, width, height, view }: ExportParams
   });
 
   pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-  pdf.save(`drawbn-bolla-${Date.now()}.pdf`);
+  pdf.save(`pennodraw-export-${Date.now()}.pdf`);
 }

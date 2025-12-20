@@ -41,8 +41,14 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
   useEffect(() => {
     const handleResize = () => {
       if (canvasRef.current) {
-        canvasRef.current.width = window.innerWidth;
-        canvasRef.current.height = window.innerHeight;
+        // Handle pixel density for crisp drawing
+        const dpr = window.devicePixelRatio || 1;
+        canvasRef.current.width = window.innerWidth * dpr;
+        canvasRef.current.height = window.innerHeight * dpr;
+        canvasRef.current.style.width = `${window.innerWidth}px`;
+        canvasRef.current.style.height = `${window.innerHeight}px`;
+        const ctx = canvasRef.current.getContext('2d');
+        if (ctx) ctx.scale(dpr, dpr);
         renderAll();
       }
     };
@@ -149,8 +155,8 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
     const startX = view.x % gridSize;
     const startY = view.y % gridSize;
     ctx.beginPath();
-    for (let x = startX; x < canvas.width; x += gridSize) { ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); }
-    for (let y = startY; y < canvas.height; y += gridSize) { ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); }
+    for (let x = startX; x < window.innerWidth; x += gridSize) { ctx.moveTo(x, 0); ctx.lineTo(x, window.innerHeight); }
+    for (let y = startY; y < window.innerHeight; y += gridSize) { ctx.moveTo(0, y); ctx.lineTo(window.innerWidth, y); }
     ctx.stroke();
 
     actions.forEach(action => drawAction(ctx, action));
