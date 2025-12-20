@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Point, DrawingAction, ActionType, FontFamily } from '../types';
-import { recognizeShape } from '../utils/shapeRecognizer';
+import { Point, DrawingAction, ActionType, FontFamily } from '../types.ts';
+import { recognizeShape } from '../utils/shapeRecognizer.ts';
 
 interface BoardProps {
   color: string;
@@ -28,7 +28,6 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
   const [initialPinchDist, setInitialPinchDist] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState<number>(1);
   
-  // Interactive Text State
   const [activeTextId, setActiveTextId] = useState<string | null>(null);
   const [activeTextPos, setActiveTextPos] = useState<Point | null>(null);
   const [activeTextValue, setActiveTextValue] = useState("");
@@ -40,20 +39,17 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
   }, [view, onViewStateChange]);
 
   useEffect(() => {
-    if (canvasRef.current) {
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-    }
-    return () => window.removeEventListener('resize', resizeCanvas);
-  }, []);
-
-  const resizeCanvas = () => {
-    if (canvasRef.current) {
-      canvasRef.current.width = window.innerWidth;
-      canvasRef.current.height = window.innerHeight;
-      renderAll();
-    }
-  };
+    const handleResize = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = window.innerWidth;
+        canvasRef.current.height = window.innerHeight;
+        renderAll();
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [actions, view]);
 
   const toWorld = useCallback((screenPoint: Point) => ({
     x: (screenPoint.x - view.x) / view.zoom,
@@ -147,7 +143,7 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = '#0a0a0a';
+    ctx.strokeStyle = '#0e0e0e';
     ctx.lineWidth = 1;
     const gridSize = 120 * view.zoom;
     const startX = view.x % gridSize;
@@ -162,15 +158,15 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
     if (currentPoints.length > 0 && tool === 'draw') {
         drawAction(ctx, { id: 'temp', type: 'draw', points: currentPoints, color, brushSize, isMagic });
     }
-  }, [actions, currentPoints, color, brushSize, tool, isMagic, view, toScreen, activeTextId]);
+  }, [actions, currentPoints, color, brushSize, tool, isMagic, view, activeTextId]);
 
   useEffect(() => { renderAll(); }, [renderAll]);
 
   const getPoint = (e: React.MouseEvent | React.TouchEvent | Touch): Point => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
-    const clientX = 'clientX' in e ? e.clientX : (e as any).touches[0].clientX;
-    const clientY = 'clientY' in e ? e.clientY : (e as any).touches[0].clientY;
+    const clientX = 'clientX' in e ? (e as any).clientX : (e as any).touches[0].clientX;
+    const clientY = 'clientY' in e ? (e as any).clientY : (e as any).touches[0].clientY;
     return { x: clientX - rect.left, y: clientY - rect.top };
   };
 
@@ -314,7 +310,7 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
   const textScreenPos = activeTextPos ? toScreen(activeTextPos) : null;
 
   return (
-    <div className="w-full h-full relative overflow-hidden">
+    <div className="w-full h-full relative overflow-hidden bg-black">
       <canvas
         ref={canvasRef}
         onMouseDown={handleStart}
@@ -335,12 +331,12 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
         onTouchStart={handleStart}
         onTouchMove={handleMove}
         onTouchEnd={handleEnd}
-        className="cursor-crosshair w-full h-full"
+        className="cursor-crosshair w-full h-full block"
       />
 
       {textScreenPos && (
         <div 
-          className={`absolute z-50 transition-opacity flex flex-col items-start ${isDraggingText ? 'opacity-40' : 'opacity-100'}`}
+          className={`absolute z-[60] transition-opacity flex flex-col items-start ${isDraggingText ? 'opacity-40' : 'opacity-100'}`}
           style={{ 
             left: textScreenPos.x, 
             top: textScreenPos.y,
@@ -350,7 +346,6 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
         >
           <div className="absolute -top-6 left-0 flex items-center gap-2 whitespace-nowrap bg-black/60 backdrop-blur-md text-[9px] text-white/60 px-2 py-0.5 rounded-t border border-white/10 uppercase font-black tracking-widest pointer-events-none">
              <span>{isDraggingText ? 'Moving...' : 'Typing...'}</span>
-             {activeTextValue && !isDraggingText && <span className="text-purple-400">Press Enter to save</span>}
           </div>
           <input
             ref={inputRef}
@@ -359,7 +354,7 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
             onChange={(e) => setActiveTextValue(e.target.value)}
             onBlur={completeTextInput}
             onKeyDown={(e) => e.key === 'Enter' && completeTextInput()}
-            className="bg-transparent border-none outline-none font-bold p-0 m-0 pointer-events-auto shadow-none"
+            className="bg-transparent border-none outline-none font-bold p-0 m-0 pointer-events-auto"
             style={{ 
               color: color, 
               fontSize: `${brushSize}px`,
@@ -368,7 +363,7 @@ const Board: React.FC<BoardProps> = ({ color, brushSize, fontFamily, isMagic, to
               minWidth: '20px',
               width: `${Math.max(1, activeTextValue.length + 1) * 0.7}em`
             }}
-            placeholder="Type here..."
+            placeholder="Type..."
           />
         </div>
       )}

@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import Board from './components/Board';
-import Controls from './components/Controls';
-import { Color, DrawingAction, ActionType, FontFamily } from './types';
-import { exportToPDF } from './utils/pdfExport';
+import Board from './components/Board.tsx';
+import Controls from './components/Controls.tsx';
+import { Color, DrawingAction, ActionType, FontFamily } from './types.ts';
+import { exportToPDF } from './utils/pdfExport.ts';
 
 const App: React.FC = () => {
   const [brushSize, setBrushSize] = useState(32);
@@ -122,9 +122,9 @@ const App: React.FC = () => {
   const shareUrl = `${window.location.origin}${window.location.pathname}${window.location.hash}`;
 
   return (
-    <div className="fixed inset-0 bg-[#000000] flex flex-col overflow-hidden select-none touch-none">
+    <div className="fixed inset-0 bg-[#000000] flex flex-col overflow-hidden select-none touch-none z-0">
       {/* Session Header */}
-      <div className="absolute top-4 left-4 z-10 pointer-events-none flex flex-col gap-1.5">
+      <div className="absolute top-4 left-4 z-50 pointer-events-none flex flex-col gap-1.5">
         <h1 className="text-white font-bold text-2xl tracking-tighter">
           DRAWBN<span className="text-purple-500 font-normal">.BOLLA</span>
         </h1>
@@ -145,7 +145,7 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <main className="flex-1 relative">
+      <main className="flex-1 relative z-10">
         <Board 
           color={getColorHex(color)}
           brushSize={brushSize}
@@ -178,7 +178,6 @@ const App: React.FC = () => {
         onSave={handleManualSave}
       />
 
-      {/* Share Overlay */}
       {showShareModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-zinc-900 border border-zinc-800 p-8 rounded-[2.5rem] w-full max-w-md shadow-2xl text-center">
@@ -186,9 +185,9 @@ const App: React.FC = () => {
                <svg className="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
             </div>
             <h2 className="text-white font-black text-2xl mb-2 tracking-tight">Share Session</h2>
-            <p className="text-zinc-400 text-sm mb-8 px-4">Link for <b>draw.bolla.network</b>. Anyone with this link can view your current session.</p>
+            <p className="text-zinc-400 text-sm mb-8 px-4">Link for <b>draw.bolla.network</b>. Anyone with this link can view your session.</p>
             <div className="relative mb-8">
-              <input readOnly value={shareUrl} className="w-full bg-black border border-zinc-800 rounded-2xl px-5 py-4 text-zinc-300 text-sm font-mono focus:outline-none transition-colors" />
+              <input readOnly value={shareUrl} className="w-full bg-black border border-zinc-800 rounded-2xl px-5 py-4 text-zinc-300 text-sm font-mono focus:outline-none" />
               <button 
                 onClick={() => { 
                   navigator.clipboard.writeText(shareUrl); 
