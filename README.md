@@ -1,28 +1,52 @@
 
-# Pennodraw Storage Management
+# Pennodraw Project Storage
 
-Pennodraw uses `localStorage` to persist your creative sessions directly in your browser. This ensures that your work is available even after closing the tab.
+Pennodraw manages projects in a specialized "Vault" located within your browser's local storage. Each project is assigned a unique hash and saved independently.
 
-## Document Structure
-All drawings are saved using the prefix:
-`pennodraw_doc_` followed by a unique session hash (e.g., `pennodraw_doc_x8f2k9a`).
+## Data Organization
+- **Folder Prefix**: `pennodraw_doc_`
+- **Counter**: The application counts every unique instance of this prefix in real-time.
 
-## How to Reset/Clear Saved Projects
-If you wish to clear all locally saved Pennodraw projects at once, you can follow these steps in your browser:
+## How to Manage/Zero the Data
+To completely reset your "PennoDrawrs" counter and delete all saved folder contents, follow these steps:
 
-1. Open Pennodraw in your browser.
-2. Press `F12` or `Ctrl+Shift+I` (Windows/Linux) or `Cmd+Option+I` (Mac) to open the **Developer Tools**.
+### Zeroing (Clear All)
+1. Open the Pennodraw WebApp.
+2. Press `F12` to open Developer Tools.
 3. Go to the **Console** tab.
-4. Copy and paste the following command and press **Enter**:
+4. Execute the following script:
 
 ```javascript
+// Scan and remove all Pennodraw documents
 Object.keys(localStorage)
   .filter(key => key.startsWith('pennodraw_doc_'))
   .forEach(key => localStorage.removeItem(key));
+
+// Clear manifest if any
+localStorage.removeItem('pennodraw_manifest');
+
+// Refresh app
 location.reload();
 ```
 
-This script scans your browser's local storage for keys belonging specifically to Pennodraw and removes them, resetting your project count and clearing the workspace history.
+### Manual Backup (Save Folder)
+To extract all data before zeroing, run this in the console:
+
+```javascript
+(function() {
+  const vault = {};
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('pennodraw_doc_')) {
+      vault[key] = JSON.parse(localStorage.getItem(key));
+    }
+  });
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vault));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", "pennodraw_vault_backup.json");
+  downloadAnchor.click();
+})();
+```
 
 ---
-*Created by Pennodraw Team*
+*Production ready. Mobile optimized. Privacy first.*
